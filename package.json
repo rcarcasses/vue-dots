@@ -1,9 +1,9 @@
 {
   "name": "vue-dots",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Show dots and connections among them",
-  "author": "Yuselis Castano <ycastano87@gmail.com>",
-  "private": true,
+  "author": "Robert Carcasses Quevedo <carcasses@gmail.com>",
+  "license": "MIT",
   "scripts": {
     "dev": "node build/dev-server.js",
     "start": "npm run dev",
@@ -12,6 +12,19 @@
     "test": "npm run unit",
     "lint": "eslint --ext .js,.vue src test/unit/specs"
   },
+  "homepage": "https://github.com/rcarcasses/vue-dots",
+  "bugs": "https://github.com/rcarcasses/vue-dots/issues",
+  "repository": {
+    "url": "https://github.com/rcarcasses/vue-dots",
+    "type": "git"
+  },
+  "contributors": [
+    "Yuselis Castano Guerrero <ycastano87@gmail.com>"
+  ],
+  "files": [
+    "dist/**/*"
+  ],
+  "main": "dist/vue-dots.js",
   "dependencies": {
     "vue": "^2.4.2"
   },

@@ -38,9 +38,10 @@ import ZoomOut from './icons/ZoomOut'
 import Delete from './icons/Delete'
 import Move from './icons/Move'
 import BuildPath from './icons/BuildPath'
-import {BUILD, MOVE, DELETE, store} from './store'
+import {BUILD, MOVE, DELETE} from './store'
 
 export default {
+  props: ['store'],
   components: {
     ZoomIn,
     ZoomOut,
@@ -65,8 +66,8 @@ export default {
       beingDragId: -1,      // who is being dragged
       isDragging: false,    // says if we are currently dragging something
       isEditing: true,
-      state: store.state,
-      actions: store.actions
+      state: this.store.state,
+      actions: this.store.actions
     }
   },
   methods: {

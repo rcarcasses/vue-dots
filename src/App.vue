@@ -1,14 +1,20 @@
 <template>
   <div id="app">
-    <svg-dots/>
+    <svg-dots :store="store"/>
   </div>
 </template>
 
 <script>
 import SVGDots from './components/SVGDots'
+import {store} from './components/store'
 
 export default {
   name: 'app',
+  data () {
+    return {
+      store
+    }
+  },
   components: {
     'svg-dots': SVGDots
   }

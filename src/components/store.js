@@ -17,7 +17,8 @@ const state = {
 }
 
 function getNewNodeId () {
-  return state.lastId++
+  const newId = state.lastId += 1
+  return newId
 }
 
 function createNode (x, y) {
