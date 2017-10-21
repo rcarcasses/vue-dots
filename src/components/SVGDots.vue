@@ -7,7 +7,8 @@
       <zoom-in @click.native.stop="zoomIn"/>
       <zoom-out @click.native.stop="zoomOut"/>
     </span>
-    <svg id="svgMap" width="100%" height="100%" @click="clickSVG" @mousedown="mousedownSVG" @dblclick="resetPathStartingPoint">
+    <svg id="svgMap" width="100%" height="100%" @click="clickSVG" @mousedown="mousedownSVG" @dblclick="resetPathStartingPoint"
+     xmlns="http://www.w3.org/2000/svg" xmlns:xlink= "http://www.w3.org/1999/xlink">
       <defs>
         <filter id="dropShadow" x="0" y="0">
           <feOffset result="offOut" in="SourceAlpha" dx="-2" dy="-2" />
@@ -21,7 +22,7 @@
           <g id="gnodes" v-for="n in state.nodes">
             <template v-if="n.icon">
               <image class="locations node" :xlink:href="n.icon" :x="n.x - ICON_SIZE / 2" :y="n.y" 
-                    :id="n.id" :nodeId="n.id"
+                    :width="ICON_SIZE" :height="ICON_SIZE" :id="n.id" :nodeId="n.id"
                     @click="nodeClick" @mousedown.stop="startDragNode"
                     :key="'img' + n.id"  filter="url(#dropShadow)" />
               <text :x="n.x + ICON_SIZE / 2 + 10" :y="n.y + ICON_SIZE / 2 + 6" font-size="24" font-weight="bold">
