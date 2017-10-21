@@ -13,15 +13,33 @@ const state = {
   dotStroke: 'rgb(107, 107, 144)',    // dot stroke, as appears in the svg
   dotFill: 'rgb(107, 107, 144)',      // dot fill color
   mode: BUILD,          // current mode of the component
+  prevNodeId: -1,       // last node from which a link will be constructed
   lineStyle: 'stroke:rgb(107, 107, 144);stroke-width:4'
+}
+
+function setPrevNodeId (id) {
+  state.prevNodeId = id
+}
+
+function isStartingPoint () {
+  return state.prevNodeId === -1
+}
+
+function resetPathBuilding () {
+  state.prevNodeId = -1
 }
 
 function getNewNodeId () {
   const newId = state.lastId += 1
   return newId
 }
-
-function createNode (x, y) {
+/**
+ * This function receives an object with the definition of the node to
+ * be created. This definition is an object which should contain at least
+ * the x and y values which denote the position of the node unscaled
+ */
+function createNode (obj) {
+  let {x, y} = obj
   // we update the id store
   x /= state.scale
   x -= state.shiftX
@@ -29,6 +47,7 @@ function createNode (x, y) {
   y -= state.shiftY
   const id = getNewNodeId()
   const newNode = {
+    ...obj,
     id,
     x,
     y
@@ -37,10 +56,12 @@ function createNode (x, y) {
   state.nodes.push(newNode)
   return newNode
 }
+
 // adds a new link given the from and to nodes id
 function createLink (from, to) {
   state.links.push({from, to})
 }
+
 // delete a node given its id
 function deleteNode (id) {
   console.log('[INFO] delete node', id)
@@ -53,28 +74,33 @@ function deleteNode (id) {
 function setScale (s) {
   state.scale = s
 }
+
 function shiftSVG (dx, dy) {
   const newX = state.shiftX + dx
   const newY = state.shiftY + dy
   const transform = 'translate(' + newX + ',' + newY + ')'
-  console.log('[DEBUG] moving', transform)
   // save how much did we shift the svg
   state.shiftX = newX
   state.shiftY = newY
   return transform
 }
+
 function setBuildingMode () {
   console.log('[INFO] Setting BUILD mode')
+  resetPathBuilding()
   state.mode = BUILD
 }
+
 function setMoveMode () {
   console.log('[INFO] Setting MOVE mode')
   state.mode = MOVE
 }
+
 function setDeleteMode () {
   console.log('[INFO] Setting DELETE mode')
   state.mode = DELETE
 }
+
 function deleteLink (linkId) {
   // remove the link from the links list
   state.links = state.links.filter(l => l.from + '-' + l.to !== linkId)
@@ -88,13 +114,15 @@ function splitLink (linkId, x, y) {
   // remove the link from the links list
   state.links = state.links.filter(l => l.from + '-' + l.to !== linkId)
   // create a new node
-  const {id} = createNode(x, y)
+  const {id} = createNode({x, y})
   // now create two new links
   this.createLink(from, id)
   this.createLink(id, to)
+  // store the last id of the node created
+  state.prevNodeId = id
   console.log('[INFO] Splitting link and adding a new node inbetween')
-  return id
 }
+
 function shiftNode (nodeId, dx, dy) {
   // get the node to shift
   for (let i = 0; i < state.nodes.length; i++) {
@@ -107,6 +135,9 @@ function shiftNode (nodeId, dx, dy) {
   }
 }
 const actions = {
+  setPrevNodeId,
+  isStartingPoint,
+  resetPathBuilding,
   // create a new node and add it to the node list
   createNode,
   deleteNode,
@@ -121,7 +152,13 @@ const actions = {
   shiftNode
 }
 
+const test = [
+  {icon: '/static/zara.jpg', name: 'zara', x: 120, y: 100},
+  {icon: '/static/h_m.png', name: 'HM', x: 250, y: 200}
+].map(n => createNode(n))
+
 export const store = {
   state,
+  test,
   actions
 }

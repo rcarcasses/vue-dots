@@ -17,13 +17,24 @@
       </defs>
       <g id="groupScale" transform="scale(1)">
         <g id="groupMove" transform="translate(0,0)">
-         <image xlink:href="/static/Third_Floor_Plan_2016.jpg" />
-         <image class="locations" v-for="img in images" :xlink:href="img.url" :x="img.x" :y="img.y" :id="img.id" :key="'img' + img.id"
-                filter="url(#dropShadow)" />
-          <circle v-for="n in state.nodes" 
-            :cx="n.x" :cy="n.y" r="7" :key="'n' + n.id" :nodeId="n.id"
-            @click="nodeClick" @mousedown.stop="startDragNode"
-            class="circle" :stroke="state.dotStroke" :fill="state.dotFill" />
+         <image :xlink:href="background" />
+          <g id="gnodes" v-for="n in state.nodes">
+            <template v-if="n.icon">
+              <image class="locations node" :xlink:href="n.icon" :x="n.x - ICON_SIZE / 2" :y="n.y" 
+                    :id="n.id" :nodeId="n.id"
+                    @click="nodeClick" @mousedown.stop="startDragNode"
+                    :key="'img' + n.id"  filter="url(#dropShadow)" />
+              <text :x="n.x + ICON_SIZE / 2 + 10" :y="n.y + ICON_SIZE / 2 + 6" font-size="24" font-weight="bold">
+                {{n.name}}
+              </text>
+              <rect :x="n.x - 7" :y="n.y - 7" width="14" height="14" class="node" :stroke="state.dotStroke" :fill="state.dotFill"/>
+            </template>
+            <template v-else>
+              <circle :cx="n.x" :cy="n.y" r="7" :key="'n' + n.id" :nodeId="n.id"
+                      @click="nodeClick" @mousedown.stop="startDragNode"
+                      class="circle node" :stroke="state.dotStroke" :fill="state.dotFill" />
+            </template>
+          </g>         
           <line v-for="l in lineLinks" 
                 :x1="l.x1" :y1="l.y1" :x2="l.x2" :y2="l.y2" :style="state.lineStyle" :key="l.id" :linkId="l.id"
                 class="line" @click.stop="lineClick"/>
@@ -51,16 +62,12 @@ export default {
   },
   data () {
     return {
-      images: [
-        {url: '/static/zara.jpg', id: 'zara', x: 120, y: 100},
-        {url: '/static/h_m.png', id: 'HM', x: 250, y: 200}
-      ],
       // make the constants available in the template
       BUILD: BUILD,
       MOVE: MOVE,
       DELETE: DELETE,
+      ICON_SIZE: 64,
       isSplitting: false,
-      prevNodeId: -1,       // last node from which a link will be constructed
       lastMouseX: 0,        // contains the information about the last values
       lastMouseY: 0,        // of the mouse position
       beingDragId: -1,      // who is being dragged
@@ -135,7 +142,6 @@ export default {
       window.removeEventListener('mouseup', this.stopPanSVG)
     },
     setBuildingMode (event) {
-      this.prevNodeId = -1
       this.actions.setBuildingMode()
     },
     setMoveMode (event) {
@@ -152,7 +158,7 @@ export default {
           this.actions.deleteLink(linkId)
           break
         case BUILD:
-          this.prevNodeId = this.actions.splitLink(linkId, event.offsetX, event.offsetY)
+          this.actions.splitLink(linkId, event.offsetX, event.offsetY)
           break
         default:
           break
@@ -217,37 +223,38 @@ export default {
     linkWithLastCreate (nodeClikedId) {
       // here we reset the previous node id such that new path
       // will start from here
-      if (this.prevNodeId !== -1) {
+      if (!this.actions.isStartingPoint()) {
         console.log('[INFO] Joining nodes...')
-        this.actions.createLink(this.prevNodeId, nodeClikedId)
+        this.actions.createLink(this.state.prevNodeId, nodeClikedId)
       }
-      this.prevNodeId = nodeClikedId
+      this.actions.setPrevNodeId(nodeClikedId)
       this.isSplitting = true
     },
     clickSVG (event) {
       if (!this.isEditing || this.state.mode !== BUILD) {
         return
       }
-      const newNode = this.actions.createNode(event.offsetX, event.offsetY)
+      const newNode = this.actions.createNode({ x: event.offsetX, y: event.offsetY })
 
-      // if preNode is -1 this means that this node is a starting point
-      // so at this time we don't add any link
-      if (this.prevNodeId !== -1) {
-        this.actions.createLink(this.prevNodeId, newNode.id)
+      // at this time we don't add any link
+      if (!this.actions.isStartingPoint()) {
+        this.actions.createLink(this.state.prevNodeId, newNode.id)
       }
 
       if (this.isSplitting) {
-        // the previous node id was already set
         this.isSplitting = false
       }
-      this.prevNodeId = newNode.id
+      this.actions.setPrevNodeId(newNode.id)
     },
     resetPathStartingPoint (event) {
       console.log('[INFO] reseting starting point of the path')
-      this.prevNodeId = -1
+      this.actions.resetPathBuilding()
     }
   },
   computed: {
+    background () {
+      return this.state.background
+    },
     lineLinks () {
       return this.state.links.map(l => {
         const n1 = this.state.nodes.filter(n => n.id === l.from)[0]
@@ -309,7 +316,7 @@ div{
 	stroke-width: 1;
 	stroke-linecap: round;
 }
-.circle:hover {
+.node:hover {
   stroke-width: 16px;
   cursor: pointer;
 }

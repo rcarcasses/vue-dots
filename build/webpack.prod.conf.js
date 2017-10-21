@@ -16,7 +16,7 @@ const env = process.env.NODE_ENV === 'testing'
 
 const webpackConfig = [
   merge(baseWebpackConfig, {
-    entry: path.resolve(__dirname + '/../src/App.vue'),
+    entry: path.resolve(__dirname + '/../src/plugin.js'),
     output: {
       filename: 'vue-dots.js',
       libraryTarget: 'umd',
