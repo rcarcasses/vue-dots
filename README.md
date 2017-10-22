@@ -2,6 +2,31 @@
 
 > Graph building and visualization vue component based in SVG
 
+## Usage
+Add it to your project:
+```
+yarn add vue-dots
+```
+then import the plugin in your main Vue instance:
+```
+import VueDots from 'vue-dots'
+...
+Vue.use(VueDots)
+```
+
+This registrate a global ```vue-dots``` component and a store object ```this.$vueDots``` which you can access in your own components and fully control the content of the graph editor.
+
+## Keyboard shortcuts
+The keyboard events are listened from the window:
+
+- *"b"* build mode: new nodes are added while clicking in the svg area.
+- *"m"* move mode: drag and drop of the whole document as well as of nodes.
+
+- *"d"* delete mode: nodes and links are removed on click.
+- arrow keys: move the svg in the correspondent direction.
+- *"+"* zoom in.
+- *"-"* zoom out.
+
 ## Build Setup
 
 ``` bash
@@ -12,6 +37,7 @@ npm install
 npm run dev
 
 # build for production with minification
+# This produces a Vue plugin.
 npm run build
 
 # build for production and view the bundle analyzer report

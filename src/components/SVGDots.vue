@@ -7,7 +7,7 @@
       <zoom-in @click.native.stop="zoomIn"/>
       <zoom-out @click.native.stop="zoomOut"/>
     </span>
-    <svg id="svgMap" width="100%" height="100%" @click="clickSVG" @mousedown="mousedownSVG" @dblclick="endPathBuilding"
+    <svg id="svgMap" width="100%" height="100%" @click="clickSVG" @mousedown="mousedownSVG" @dblclick.stop="endPathBuilding"
      xmlns="http://www.w3.org/2000/svg" xmlns:xlink= "http://www.w3.org/1999/xlink">
       <defs>
         <filter id="dropShadow" x="0" y="0">
@@ -74,7 +74,49 @@ export default {
       actions: this.store.actions
     }
   },
+  beforeMount () {
+    this.init()
+  },
   methods: {
+    init () {
+      console.log('[INFO] initializing')
+      window.addEventListener('keyup', this.keymonitor)
+    },
+    keymonitor (event) {
+      console.log('[INFO] key pressed', event.keyCode)
+      switch (parseInt(event.keyCode)) {
+        case 77:  // "m" from move mode
+          this.setMoveMode()
+          break
+        case 66:  // "b" from build mode
+          this.setBuildingMode()
+          break
+        case 68:  // "d" from delete mode
+          this.setDeleteMode()
+          break
+        case 82:  // "r" from reset path
+          this.resetPathBuilding()
+          break
+        case 187: // "+" zoom in
+          this.zoomIn()
+          break
+        case 189: // "-" zoom out
+          this.zoomOut()
+          break
+        case 39:  // right arrow
+          this.moveSVG(10, 0)
+          break
+        case 37:  // left arrow
+          this.moveSVG(-10, 0)
+          break
+        case 38:  // up arrow
+          this.moveSVG(0, 10)
+          break
+        case 40:  // down arrow
+          this.moveSVG(0, -10)
+          break
+      }
+    },
     zoomIn (event) {
       console.log('[INFO] Zooming in')
       const g = document.querySelector('#groupScale')
@@ -104,12 +146,11 @@ export default {
       // get how much we move from the last mouse event
       const dx = event.movementX / this.state.scale
       const dy = event.movementY / this.state.scale
-      // save mouse position for the next movement
+      this.moveSVG(dx, dy)
+    },
+    moveSVG (dx, dy) {
       const g = document.querySelector('#groupMove')
       let transform = g.getAttribute('transform')
-
-      // keep aware of future changes
-      window.addEventListener('resize', this.resizeSVG)
       transform = this.actions.shiftSVG(dx, dy)
       // move the svg
       g.setAttribute('transform', transform)
@@ -221,8 +262,10 @@ export default {
       if (!this.actions.isStartingPoint()) {
         console.log('[INFO] Joining nodes...')
         this.actions.createLink(this.state.prevNodeId, nodeClikedId)
+        this.actions.resetPathBuilding()
+      } else {
+        this.actions.setPrevNodeId(nodeClikedId)
       }
-      this.actions.setPrevNodeId(nodeClikedId)
       this.isSplitting = true
     },
     clickSVG (event) {
