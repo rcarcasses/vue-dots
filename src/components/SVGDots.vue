@@ -102,8 +102,8 @@ export default {
         return
       }
       // get how much we move from the last mouse event
-      const dx = event.movementX
-      const dy = event.movementY
+      const dx = this.scale * event.movementX
+      const dy = this.scale * event.movementY
       // save mouse position for the next movement
       const g = document.querySelector('#groupMove')
       let transform = g.getAttribute('transform')
@@ -180,8 +180,8 @@ export default {
         return
       }
       // get how much we move from the last mouse event
-      const dx = event.movementX // event.offsetX - this.lastMouseX
-      const dy = event.movementY // event.offsetY - this.lastMouseY
+      const dx = this.scale * event.movementX // event.offsetX - this.lastMouseX
+      const dy = this.scale * event.movementY // event.offsetY - this.lastMouseY
       if (Math.abs(dx) > 100 || Math.abs(dy) > 100) {
         return
       }
