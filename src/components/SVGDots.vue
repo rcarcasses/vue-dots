@@ -7,7 +7,7 @@
       <zoom-in @click.native.stop="zoomIn"/>
       <zoom-out @click.native.stop="zoomOut"/>
     </span>
-    <svg id="svgMap" width="100%" height="100%" @click="clickSVG" @mousedown="mousedownSVG" @dblclick="resetPathStartingPoint"
+    <svg id="svgMap" width="100%" height="100%" @click="clickSVG" @mousedown="mousedownSVG" @dblclick="endPathBuilding"
      xmlns="http://www.w3.org/2000/svg" xmlns:xlink= "http://www.w3.org/1999/xlink">
       <defs>
         <filter id="dropShadow" x="0" y="0">
@@ -21,20 +21,17 @@
          <image :xlink:href="background" />
           <g id="gnodes" v-for="n in state.nodes">
             <template v-if="n.icon">
-              <image class="locations node" :xlink:href="n.icon" :x="n.x - ICON_SIZE / 2" :y="n.y" 
+              <image class="locations node" :xlink:href="n.icon" :x="n.x - ICON_SIZE / 2" :y="n.y - ICON_SIZE" 
                     :width="ICON_SIZE" :height="ICON_SIZE" :id="n.id" :nodeId="n.id"
                     @click="nodeClick" @mousedown.stop="startDragNode"
                     :key="'img' + n.id"  filter="url(#dropShadow)" />
-              <text :x="n.x + ICON_SIZE / 2 + 10" :y="n.y + ICON_SIZE / 2 + 6" font-size="24" font-weight="bold">
+              <text :x="n.x + ICON_SIZE / 2 + 10" :y="n.y - (ICON_SIZE - FONT_SIZE) / 2" :font-size="FONT_SIZE" font-weight="bold">
                 {{n.name}}
               </text>
-              <rect :x="n.x - 7" :y="n.y - 7" width="14" height="14" class="node" :stroke="state.dotStroke" :fill="state.dotFill"/>
             </template>
-            <template v-else>
-              <circle :cx="n.x" :cy="n.y" r="7" :key="'n' + n.id" :nodeId="n.id"
-                      @click="nodeClick" @mousedown.stop="startDragNode"
-                      class="circle node" :stroke="state.dotStroke" :fill="state.dotFill" />
-            </template>
+            <circle :cx="n.x" :cy="n.y" r="7" :key="'n' + n.id" :nodeId="n.id"
+                    @click="nodeClick" @mousedown.stop="startDragNode"
+                    class="circle node" :stroke="state.dotStroke" :fill="state.dotFill" />
           </g>         
           <line v-for="l in lineLinks" 
                 :x1="l.x1" :y1="l.y1" :x2="l.x2" :y2="l.y2" :style="state.lineStyle" :key="l.id" :linkId="l.id"
@@ -68,9 +65,8 @@ export default {
       MOVE: MOVE,
       DELETE: DELETE,
       ICON_SIZE: 64,
+      FONT_SIZE: 24,
       isSplitting: false,
-      lastMouseX: 0,        // contains the information about the last values
-      lastMouseY: 0,        // of the mouse position
       beingDragId: -1,      // who is being dragged
       isDragging: false,    // says if we are currently dragging something
       isEditing: true,
@@ -97,9 +93,6 @@ export default {
       if (this.state.mode !== MOVE) {
         return
       }
-      // save mouse position for the next movement
-      this.lastMouseX = event.offsetX
-      this.lastMouseY = event.offsetY
       // now listen globally for mouse movements
       window.addEventListener('mousemove', this.panSVG)
       window.addEventListener('mouseup', this.stopPanSVG)
@@ -109,11 +102,9 @@ export default {
         return
       }
       // get how much we move from the last mouse event
-      const dx = event.offsetX - this.lastMouseX
-      const dy = event.offsetY - this.lastMouseY
+      const dx = event.movementX
+      const dy = event.movementY
       // save mouse position for the next movement
-      this.lastMouseX = event.offsetX
-      this.lastMouseY = event.offsetY
       const g = document.querySelector('#groupMove')
       let transform = g.getAttribute('transform')
 
@@ -124,10 +115,10 @@ export default {
       g.setAttribute('transform', transform)
     },
     resizeSVG (event) {
-      console.log('[INFO] Resizing')
-      const svg = document.querySelector('#svgMap')
+      console.log('[WARN][TODO] Resizing')
+      /* const svg = document.querySelector('#svgMap')
       const viewBox = this.getViewBox(svg)
-      svg.setAttribute('viewBox', viewBox)
+      svg.setAttribute('viewBox', viewBox) */
     },
     getViewBox (svg) {
       const box = svg.getBoundingClientRect()
@@ -169,14 +160,17 @@ export default {
       if (this.state.mode !== MOVE) {
         return
       }
+      if (event.preventDefault) {
+        event.preventDefault()
+      }
+      if (event.stopPropagation) {
+        event.stopPropagation()
+      }
       // set the on mouse move listener
       window.addEventListener('mousemove', this.moveNode)
       window.addEventListener('mouseup', this.stopDragNode)
       // set the dragging mode
       this.isDragging = true
-      // and save the mouse coordinates
-      this.lastMouseX = event.offsetX
-      this.lastMouseY = event.offsetY
       // set which node is starting to drag
       const nodeId = parseInt(event.target.getAttribute('nodeId'))
       this.beingDragId = nodeId
@@ -186,11 +180,11 @@ export default {
         return
       }
       // get how much we move from the last mouse event
-      const dx = event.offsetX - this.lastMouseX
-      const dy = event.offsetY - this.lastMouseY
-      // save mouse position for the next movement
-      this.lastMouseX = event.offsetX
-      this.lastMouseY = event.offsetY
+      const dx = event.movementX // event.offsetX - this.lastMouseX
+      const dy = event.movementY // event.offsetY - this.lastMouseY
+      if (Math.abs(dx) > 100 || Math.abs(dy) > 100) {
+        return
+      }
       // move the node
       this.actions.shiftNode(this.beingDragId, dx, dy)
     },
@@ -247,9 +241,10 @@ export default {
       }
       this.actions.setPrevNodeId(newNode.id)
     },
-    resetPathStartingPoint (event) {
+    endPathBuilding (event) {
       console.log('[INFO] reseting starting point of the path')
       this.actions.resetPathBuilding()
+      this.actions.setMoveMode()
     }
   },
   computed: {
