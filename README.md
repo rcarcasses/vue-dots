@@ -1,6 +1,8 @@
 # vue-dots
 
-> Graph building and visualization vue component based in SVG
+> Simple graph building and visualization vue component based in SVG
+
+![Alt Text](https://github.com/rcarcasses/vue-dots/raw/master/examples/vue-dots.gif)
 
 ## Usage
 Add it to your project:
