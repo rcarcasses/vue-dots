@@ -59,6 +59,12 @@ function createNode (obj) {
 
 // adds a new link given the from and to nodes id
 function createLink (from, to) {
+  // if the link exist then skip it
+  if (state.links.filter(l => l.from === from && l.to === to).length > 0 ||
+      state.links.filter(l => l.from === to && l.to === from).length > 0) {
+    console.log('[INFO] link exist, not creating')
+    return
+  }
   state.links.push({from, to})
 }
 

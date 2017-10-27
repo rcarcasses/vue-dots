@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="vue-dots">
     <span class="controls">
       <build-path @click.native.stop="setBuildingMode" v-bind:class="this.state.mode == BUILD ? 'selected' : ''"/>
       <move @click.native.stop="setMoveMode" v-bind:class="this.state.mode == MOVE ? 'selected' : ''"/>
@@ -18,7 +18,7 @@
       </defs>
       <g id="groupScale" transform="scale(1)">
         <g id="groupMove" transform="translate(0,0)">
-         <image :xlink:href="background" />
+         <image id="backgroundImg" :xlink:href="background"/>
           <g id="gnodes" v-for="n in state.nodes">
             <template v-if="n.icon">
               <image class="locations node" :xlink:href="n.icon" :x="n.x - ICON_SIZE / 2" :y="n.y - ICON_SIZE" 
@@ -81,6 +81,12 @@ export default {
     init () {
       console.log('[INFO] initializing')
       window.addEventListener('keyup', this.keymonitor)
+      window.addEventListener('resize', this.resizeSVG)
+    },
+    resizeSVG (event) {
+      const img = document.querySelector('#backgroundImg')
+      const box = img.getBoundingClientRect()
+      console.log('[WARN][TODO] Resizing, new background size', box.width, box.height)
     },
     keymonitor (event) {
       console.log('[INFO] key pressed', event.keyCode)
@@ -154,16 +160,6 @@ export default {
       transform = this.actions.shiftSVG(dx, dy)
       // move the svg
       g.setAttribute('transform', transform)
-    },
-    resizeSVG (event) {
-      console.log('[WARN][TODO] Resizing')
-      /* const svg = document.querySelector('#svgMap')
-      const viewBox = this.getViewBox(svg)
-      svg.setAttribute('viewBox', viewBox) */
-    },
-    getViewBox (svg) {
-      const box = svg.getBoundingClientRect()
-      return '0 0 ' + box.width + ' ' + box.height
     },
     stopPanSVG (event) {
       if (this.state.mode !== MOVE) {
@@ -257,6 +253,9 @@ export default {
     },
     // join node to the last one
     linkWithLastCreate (nodeClikedId) {
+      if (this.state.prevNodeId === nodeClikedId) {
+        return
+      }
       // here we reset the previous node id such that new path
       // will start from here
       if (!this.actions.isStartingPoint()) {
@@ -339,10 +338,6 @@ export default {
 }
 .controls .selected {
   opacity: 1;
-}
-div{
-  position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
 }
 #mapBackground img {
   width: 100%;
