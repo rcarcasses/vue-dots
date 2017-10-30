@@ -14,7 +14,8 @@ const state = {
   dotFill: 'rgb(107, 107, 144)',      // dot fill color
   mode: BUILD,          // current mode of the component
   prevNodeId: -1,       // last node from which a link will be constructed
-  lineStyle: 'stroke:rgb(107, 107, 144);stroke-width:4'
+  lineStyle: 'stroke:rgb(107, 107, 144);stroke-width:4',
+  filters: [n => n.id < 4]           // contains functions to apply to the array of nodes with the purpose of filtering
 }
 
 function setPrevNodeId (id) {

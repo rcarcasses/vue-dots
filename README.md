@@ -12,6 +12,7 @@ yarn add vue-dots
 then import the plugin in your main Vue instance:
 ```
 import VueDots from 'vue-dots'
+import 'vue-dots/dist/vue-dots.css'
 ...
 Vue.use(VueDots)
 ```

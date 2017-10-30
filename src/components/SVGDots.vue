@@ -19,7 +19,7 @@
       <g id="groupScale" transform="scale(1)">
         <g id="groupMove" transform="translate(0,0)">
          <image id="backgroundImg" :xlink:href="background"/>
-          <g id="gnodes" v-for="n in state.nodes">
+          <g id="gnodes" v-for="n in nodes" :key="'n' + n.id">
             <template v-if="n.icon">
               <image class="locations node" :xlink:href="n.icon" :x="n.x - ICON_SIZE / 2" :y="n.y - ICON_SIZE" 
                     :width="ICON_SIZE" :height="ICON_SIZE" :id="n.id" :nodeId="n.id"
@@ -33,7 +33,7 @@
                     @click="nodeClick" @mousedown.stop="startDragNode"
                     class="circle node" :stroke="state.dotStroke" :fill="state.dotFill" />
           </g>         
-          <line v-for="l in lineLinks" 
+          <line v-for="l in links" 
                 :x1="l.x1" :y1="l.y1" :x2="l.x2" :y2="l.y2" :style="state.lineStyle" :key="l.id" :linkId="l.id"
                 class="line" @click.stop="lineClick"/>
         </g>
@@ -293,26 +293,19 @@ export default {
     background () {
       return this.state.background
     },
-    lineLinks () {
-      return this.state.links.map(l => {
-        const n1 = this.state.nodes.filter(n => n.id === l.from)[0]
-        const n2 = this.state.nodes.filter(n => n.id === l.to)[0]
-        return {
-          id: l.from + '-' + l.to,
-          x1: n1.x,
-          y1: n1.y,
-          x2: n2.x,
-          y2: n2.y
-        }
-      })
-    }
-  },
-  watch: {
     links () {
-      return this.state.links.map(l => {
+      let filteredLinks = this.state.links.map(l => {
         const n1 = this.state.nodes.filter(n => n.id === l.from)[0]
         const n2 = this.state.nodes.filter(n => n.id === l.to)[0]
+        // if the nodes are supposed to be filtered then put a flag here
+        let visible = this.state.filters.map(f => f(n1))
+                                          .reduce((acc, val) => acc & val)
+        visible = visible && this.state.filters.map(f => f(n2))
+                                          .reduce((acc, val) => acc & val)
+        console.log('[DEBUG] visible', visible)
+
         return {
+          visible,
           id: l.from + '-' + l.to,
           x1: n1.x,
           y1: n1.y,
@@ -320,6 +313,15 @@ export default {
           y2: n2.y
         }
       })
+
+      return filteredLinks.filter(l => l.visible)
+    },
+    nodes () {
+      let filteredNodes = this.state.nodes
+      this.state.filters.map(f => {
+        filteredNodes = filteredNodes.filter(f)
+      })
+      return filteredNodes
     }
   }
 }
