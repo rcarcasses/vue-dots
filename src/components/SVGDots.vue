@@ -1,6 +1,6 @@
 <template>
   <div id="vue-dots">
-    <span class="controls">
+    <span class="controls unselectable">
       <build-path @click.native.stop="setBuildingMode" v-bind:class="this.state.mode == BUILD ? 'selected' : ''"/>
       <move @click.native.stop="setMoveMode" v-bind:class="this.state.mode == MOVE ? 'selected' : ''"/>
       <delete @click.native.stop="setDeleteMode" v-bind:class="this.state.mode == DELETE ? 'selected' : ''"/>
@@ -16,8 +16,8 @@
           <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
         </filter>
       </defs>
-      <g id="groupScale" transform="scale(1)">
-        <g id="groupMove" transform="translate(0,0)">
+      <g id="groupScale" :transform="scaleTransform">
+        <g id="groupMove" :transform="translateTransform">
          <image id="backgroundImg" :xlink:href="background"/>
           <g id="gnodes" v-for="n in nodes" :key="'n' + n.id">
             <template v-if="n.icon">
@@ -125,17 +125,13 @@ export default {
     },
     zoomIn (event) {
       console.log('[INFO] Zooming in')
-      const g = document.querySelector('#groupScale')
       const newScale = parseFloat(this.state.scale) + 0.1
       this.actions.setScale(newScale)
-      g.setAttribute('transform', 'scale(' + newScale + ')')
     },
     zoomOut (event) {
       console.log('[INFO] Zooming out')
-      const g = document.querySelector('#groupScale')
       const newScale = parseFloat(this.state.scale) - 0.1
       this.actions.setScale(newScale)
-      g.setAttribute('transform', 'scale(' + newScale + ')')
     },
     mousedownSVG (event) {
       if (this.state.mode !== MOVE) {
@@ -155,11 +151,7 @@ export default {
       this.moveSVG(dx, dy)
     },
     moveSVG (dx, dy) {
-      const g = document.querySelector('#groupMove')
-      let transform = g.getAttribute('transform')
-      transform = this.actions.shiftSVG(dx, dy)
-      // move the svg
-      g.setAttribute('transform', transform)
+      this.actions.shiftSVG(dx, dy)
     },
     stopPanSVG (event) {
       if (this.state.mode !== MOVE) {
@@ -290,6 +282,12 @@ export default {
     }
   },
   computed: {
+    scaleTransform () {
+      return 'scale(' + this.state.scale + ')'
+    },
+    translateTransform () {
+      return 'translate(' + this.state.shiftX + ',' + this.state.shiftY + ')'
+    },
     background () {
       return this.state.background
     },
@@ -298,12 +296,13 @@ export default {
         const n1 = this.state.nodes.filter(n => n.id === l.from)[0]
         const n2 = this.state.nodes.filter(n => n.id === l.to)[0]
         // if the nodes are supposed to be filtered then put a flag here
-        let visible = this.state.filters.map(f => f(n1))
+        let visible = true
+        if (this.state.filters.length > 0) {
+          visible = visible && this.state.filters.map(f => f(n1))
                                           .reduce((acc, val) => acc & val)
-        visible = visible && this.state.filters.map(f => f(n2))
+          visible = visible && this.state.filters.map(f => f(n2))
                                           .reduce((acc, val) => acc & val)
-        console.log('[DEBUG] visible', visible)
-
+        }
         return {
           visible,
           id: l.from + '-' + l.to,
@@ -362,5 +361,12 @@ export default {
 .locations {
   width: 64px;
   height: 64px;
+}
+.unselectable {
+  -moz-user-select: -moz-none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  -o-user-select: none;
+  user-select: none;
 }
 </style>

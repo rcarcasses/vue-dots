@@ -15,7 +15,8 @@ const state = {
   mode: BUILD,          // current mode of the component
   prevNodeId: -1,       // last node from which a link will be constructed
   lineStyle: 'stroke:rgb(107, 107, 144);stroke-width:4',
-  filters: [n => n.id < 4]           // contains functions to apply to the array of nodes with the purpose of filtering
+  filters: [],          // contains functions to apply to the array of nodes with the purpose of filtering
+  defaultNodeProps: {}  // contains a default set of properties that will be added to the created nodes
 }
 
 function setPrevNodeId (id) {
@@ -49,6 +50,7 @@ function createNode (obj) {
   const id = getNewNodeId()
   const newNode = {
     ...obj,
+    ...state.defaultNodeProps,
     id,
     x,
     y
@@ -83,13 +85,8 @@ function setScale (s) {
 }
 
 function shiftSVG (dx, dy) {
-  const newX = state.shiftX + dx
-  const newY = state.shiftY + dy
-  const transform = 'translate(' + newX + ',' + newY + ')'
-  // save how much did we shift the svg
-  state.shiftX = newX
-  state.shiftY = newY
-  return transform
+  state.shiftX = state.shiftX + dx
+  state.shiftY = state.shiftY + dy
 }
 
 function setBuildingMode () {
